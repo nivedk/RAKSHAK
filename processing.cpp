@@ -34,6 +34,7 @@ double getSlope(){
 
 }
 
+// returns slope for implementation of method of least squares for fitting y as a function of t
 double getSlopeyoft(){
     double tSum = 0, ySum = 0;
     for(int i = 0; i<centres.size();i++){
@@ -51,6 +52,7 @@ double getSlopeyoft(){
 
 }
 
+// returns slope for implementation of method of least squares for fitting x as a function of t
 double getSlopexoft(){
     double tSum = 0, xSum = 0;
     for(int i = 0; i<centres.size();i++){
@@ -79,6 +81,7 @@ double getYInt(double slope){
     return (ySum/(centres.size()+1) - slope*xSum/(centres.size()+1));
 }
 
+//Returns y intercept  for the implementation of method of least squares to get y as a function of t
 double getYIntoft(double slope){
     double tSum = 0, ySum = 0;
 
@@ -89,6 +92,7 @@ double getYIntoft(double slope){
     return (ySum/(centres.size()+1) - slope*tSum/(centres.size()+1));
 }
 
+//Returns y intercept  for the implementation of method of least squares to get x as a function of t
 double getXIntoft(double slope){
     double tSum = 0, xSum = 0;
 
@@ -105,9 +109,10 @@ int main(void){
     Mat input, output, img;
     double slope = 0, yInt = 0;
 
-
+    //For timing
     clock_t start;
 
+    //Start capturing the video
     VideoCapture cap(0);
     if(!cap.isOpened()){
         return -1;
@@ -125,8 +130,6 @@ int main(void){
     while(true){
         loopcount++;
         cap >> input;
-        //cout <<  input.cols<<endl;
-        //raise(SIGINT);
         if(input.empty()){
             cout << "can not open " << endl;
             continue;
@@ -136,34 +139,23 @@ int main(void){
 
 
 
-        //threshold(img, img, 60, 255, THRESH_BINARY);
-        //inRange(input, Scalar(0, 0, 0), Scalar(0, 255, 0), img);
+
         split(input, split_frame);
 
+        //We had used a green target. The code can be changed according to hte colour of the target
         Mat green = split_frame[1];
+
+        //The threshold values need to be set based on lighting, colour of hte object etc
         threshold(green, img, 155, 255, THRESH_BINARY);
 
-        //imshow("hey", img);
-        //waitKey(0);
+
         vector<Vec3f> circles;
 
-        //Blurring the image so that no extra unnecessary circles are detected
+        //Blurring the image so that no extra unnecessary circles are detected because HoughCircles is pretty powerful, and hence detects even vague manifestations circles as circles
         medianBlur(img, img, 27);
 
-        //Check out the fourth parameter, not too clear about it
+        //Adjust these parameters for the size of the circle, etc
         HoughCircles(img, circles, CV_HOUGH_GRADIENT, 2, 190, 100, 50,20, 90 );
-        //position.push_back(Vec2i(circles[0][0], circles[0][1]));
-
-        /*
-        Vec3i circle1 = circles[0];
-        cout<<"x: "<<circle1[0]<<" y: "<<circle1[1]<<endl;
-        //circle(input, Point((int)circle[0], (int)circle[1]),circle[2], Scalar(40, 40, 40), 5);
-        circle( input, Point(circle1[0], circle1[1]), circle1[2], Scalar(0,0,255), 3, LINE_AA);
-        circle1 = circles[1];
-        cout<<"x: "<<circle1[0]<<" y: "<<circle1[1]<<endl;
-        //circle(input, Point((int)circle[0], (int)circle[1]),circle[2], Scalar(40, 40, 40), 5);
-        circle( input, Point(circle1[0], circle1[1]), circle1[2], Scalar(0,255,255), 3, LINE_AA);
-        */
 
         loop.push_back(loopcount);
         for(int i = 0; i<circles.size();i++){
@@ -185,11 +177,7 @@ int main(void){
 
         string s = "loopcount = " + to_string(loopcount);
         if(loopcount%10 == 0){
-            //break;
-            //cout<<"vdscgtgr"<<endl;
             anchor.push_back(centres[centres.size() - 1]);
-            //cout<<anchor.size()<<endl;
-            //cout<<(clock() - start)/(double)CLOCKS_PER_SEC<<endl;
         }
 
         if(loopcount>=90){
@@ -197,7 +185,6 @@ int main(void){
             double slopext = getSlopexoft();
             double yintt = getYIntoft(slopeyt);
             double xintt = getXIntoft(slopext);
-            //double tim = 0.0;
             if(loopcount == 30){
                 tim = 3*(clock() - start)/(double)CLOCKS_PER_SEC;
             }
@@ -235,6 +222,8 @@ int main(void){
 
             string command  = "python ";
             command += filename;
+
+            //There may be some errors here when the char sent is a ';' or a '>' etc, because the terminal has special meanings for them
             system(command.c_str());
             cout<<loopcount;
             break;
